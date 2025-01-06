@@ -3,33 +3,31 @@
 #include "include/Echipa.h"
 #include "include/Scor.h"
 #include "include/Joc.h"
-#include "include/Exceptii.h" // Asigura-te ca include excepțiile personalizate
-
+#include "include/Exceptii.h"
 int main()
 {
     try
     {
-        // Inițializează jocul cu fișierele de intrare
+
         Joc joc_actual("echipe.txt", "sportivi_fotbal.txt", "sportivi_box.txt", "sportivi_inot.txt");
 
-        // Pornește jocul
         joc_actual.start_game();
     }
-    catch (const JocException &e) // Prinde excepțiile specifice jocului
+    catch (const JocException &e)
     {
         std::cerr << "Eroare specifică: " << e.what() << std::endl;
-        return 1; // Cod de eroare specific
+        return 1;
     }
-    catch (const std::exception &e) // Prinde alte excepții din STL
+    catch (const std::exception &e)
     {
         std::cerr << "Eroare neașteptată: " << e.what() << std::endl;
-        return 2; // Cod de eroare generic
+        return 2;
     }
-    catch (...) // Prinde orice altceva (siguranță suplimentară)
+    catch (...)
     {
         std::cerr << "Eroare necunoscută a apărut." << std::endl;
-        return 3; // Cod de eroare necunoscut
+        return 3;
     }
 
-    return 0; // Executare cu succes
+    return 0;
 }
