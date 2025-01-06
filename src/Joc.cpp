@@ -255,7 +255,7 @@ void Joc::tura_joc()
                       << "Nu te descuraja! Poate data viitoare vei fi mai norocos.\n"
                       << "Memoreaza jucatorii si nu-i alege de doua ori!\n"
                       << "===============================================\n";
-            throw JucatorInvalidException(nume_jucator_ales);
+            // throw JucatorInvalidException(nume_jucator_ales);
 
             return;
         }
