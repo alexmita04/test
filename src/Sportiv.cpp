@@ -6,6 +6,7 @@ int Sportiv::counter_jucatori = 0;
 int JucatorFotbal::counter_jucatori_fotbal = 0;
 int JucatorBox::counter_jucatori_box = 0;
 int JucatorInot::counter_jucatori_inot = 0;
+int Tenisman::counter_jucatori_tenis = 0;
 
 Sportiv::Sportiv(const std::string &nume_, int varsta_, int id_)
     : nume(nume_), varsta(varsta_), id(id_)
@@ -212,6 +213,58 @@ std::unique_ptr<Sportiv> JucatorInot::clone() const
 }
 
 bool JucatorInot::nuEsteFotbalist() const
+{
+    return true;
+}
+
+Tenisman::Tenisman() : Sportiv(), numar_rachete(0)
+{
+    ++counter_jucatori_tenis;
+}
+
+Tenisman::Tenisman(const std::string &nume_, int varsta_, int id_, int numar_rachete_)
+    : Sportiv(nume_, varsta_, id_), numar_rachete(numar_rachete_)
+{
+    ++counter_jucatori_tenis;
+}
+
+Tenisman::Tenisman(const Tenisman &other)
+    : Sportiv(other), numar_rachete(other.numar_rachete)
+{
+    ++counter_jucatori_tenis;
+}
+
+Tenisman &Tenisman::operator=(const Tenisman &other)
+{
+    if (this != &other)
+    {
+        Sportiv::operator=(other);
+        numar_rachete = other.numar_rachete;
+    }
+    return *this;
+}
+
+Tenisman::~Tenisman()
+{
+    --counter_jucatori_tenis;
+}
+
+void Tenisman::afisare(std::ostream &os) const
+{
+    os << numar_rachete;
+}
+
+void Tenisman::citire(std::istream &is)
+{
+    is >> numar_rachete;
+}
+
+std::unique_ptr<Sportiv> Tenisman::clone() const
+{
+    return std::make_unique<Tenisman>(*this);
+}
+
+bool Tenisman::nuEsteFotbalist() const
 {
     return true;
 }
