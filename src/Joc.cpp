@@ -98,6 +98,7 @@ Joc::Joc(const std::string &fisier_echipe,
     this->populate_jucatori();
 }
 
+// comentariu
 std::ostream &operator<<(std::ostream &os, const Joc &joc)
 {
     os << "Joc:\n";
