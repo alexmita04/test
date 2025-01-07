@@ -108,7 +108,7 @@ public:
     Tenisman(const std::string &nume_, int varsta_, int id_, int numar_rachete_);
     Tenisman(const Tenisman &other);
     Tenisman &operator=(const Tenisman &other);
-    ~Tenisman();
+    ~Tenisman() override;
 
     std::unique_ptr<Sportiv> clone() const override;
     bool nuEsteFotbalist() const override;
