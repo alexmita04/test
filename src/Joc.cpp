@@ -3,29 +3,36 @@
 #include <algorithm>
 #include <random>
 #include <chrono>
+#include <sstream>
 
 Joc::Joc(const Scor &scorul_jocului_,
          const std::vector<Echipa> &echipe_,
-         const std::vector<JucatorFotbal> &jucatori_fotbal_,
-         const std::vector<JucatorBox> &jucaotri_box_,
-         const std::vector<JucatorInot> &jucatori_inot_)
+         const std::vector<std::unique_ptr<Sportiv>> &jucatori_)
     : scorul_jocului(scorul_jocului_),
       echipe(echipe_),
-      jucatori_fotbal(jucatori_fotbal_),
-      jucatori_box(jucaotri_box_),
-      jucatori_inot(jucatori_inot_),
       jucatori(),
       jucatori_selectati(),
-      game_running(0) {}
+      game_running(0),
+      numar_jucatori_fotbal(0)
+{
+    for (const auto &jucator : jucatori_)
+    {
+        jucatori.push_back(jucator->clone());
+        if (!jucator->nuEsteFotbalist())
+        {
+            numar_jucatori_fotbal++;
+        }
+    }
+}
 
 Joc::Joc(const std::string &fisier_echipe,
-         const std::string &fisier_sportivi_fotbal,
-         const std::string &fisier_sportivi_box,
-         const std::string &fisier_sportivi_inot)
+         const std::string &fisier_sportivi)
     : scorul_jocului(0, 0),
+      echipe(),
       jucatori(),
       jucatori_selectati(),
-      game_running(0)
+      game_running(0),
+      numar_jucatori_fotbal(0)
 {
     std::ifstream fin_echipe(fisier_echipe);
     if (!fin_echipe)
@@ -44,61 +51,69 @@ Joc::Joc(const std::string &fisier_echipe,
 
     fin_echipe.close();
 
-    std::ifstream fin_jucatori_fotbal(fisier_sportivi_fotbal);
-    if (!fin_jucatori_fotbal)
+    std::ifstream fin_jucatori(fisier_sportivi);
+    if (!fin_jucatori)
     {
-        throw FisierInaccesibilException(fisier_sportivi_fotbal);
+        throw FisierInaccesibilException(fisier_sportivi);
     }
 
-    while (true)
+    std::string type;
+    while (fin_jucatori >> type)
     {
-        JucatorFotbal jucator_fotbal;
-        if (!(fin_jucatori_fotbal >> jucator_fotbal))
-            break;
+        if (type == "fotbalist")
+        {
+            std::string nume, post;
+            int varsta, id, numar_tricou;
 
-        this->jucatori_fotbal.push_back(jucator_fotbal);
+            fin_jucatori >> nume >> varsta >> id >> post >> numar_tricou;
+
+            auto jucator = std::make_unique<JucatorFotbal>(nume, varsta, id, post, numar_tricou);
+            jucatori.push_back(std::move(jucator));
+
+            numar_jucatori_fotbal++;
+        }
+        else if (type == "boxer")
+        {
+            std::string nume;
+            int varsta, id;
+            double greutate;
+
+            fin_jucatori >> nume >> varsta >> id >> greutate;
+
+            auto jucator = std::make_unique<JucatorBox>(nume, varsta, id, greutate);
+            jucatori.push_back(std::move(jucator));
+        }
+        else if (type == "inotator")
+        {
+            std::string nume;
+            int varsta, id;
+            double timp_record;
+
+            fin_jucatori >> nume >> varsta >> id >> timp_record;
+
+            auto jucator = std::make_unique<JucatorInot>(nume, varsta, id, timp_record);
+            jucatori.push_back(std::move(jucator));
+        }
+        else if (type == "tenismen")
+        {
+            std::string nume;
+            int varsta, id, clasament_wta;
+
+            fin_jucatori >> nume >> varsta >> id >> clasament_wta;
+
+            auto jucator = std::make_unique<JucatorTenis>(nume, varsta, id, clasament_wta);
+            jucatori.push_back(std::move(jucator));
+        }
+        else
+        {
+            std::cerr << "Tip necunoscut de jucator: " << type << std::endl;
+            fin_jucatori.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Ignoră restul liniei
+        }
     }
 
-    fin_jucatori_fotbal.close();
-
-    std::ifstream fin_jucatori_box(fisier_sportivi_box);
-    if (!fin_jucatori_box)
-    {
-        throw FisierInaccesibilException(fisier_sportivi_box);
-    }
-
-    while (true)
-    {
-        JucatorBox jucator_box;
-        if (!(fin_jucatori_box >> jucator_box))
-            break;
-
-        this->jucatori_box.push_back(jucator_box);
-    }
-
-    fin_jucatori_box.close();
-
-    std::ifstream fin_jucatori_inot(fisier_sportivi_inot);
-    if (!fin_jucatori_inot)
-    {
-        throw FisierInaccesibilException(fisier_sportivi_inot);
-    }
-
-    while (true)
-    {
-        JucatorInot jucator_inot;
-        if (!(fin_jucatori_inot >> jucator_inot))
-            break;
-
-        this->jucatori_inot.push_back(jucator_inot);
-    }
-
-    fin_jucatori_inot.close();
-
-    this->populate_jucatori();
+    fin_jucatori.close();
 }
 
-// comentariu
 std::ostream &operator<<(std::ostream &os, const Joc &joc)
 {
     os << "Joc:\n";
@@ -107,24 +122,6 @@ std::ostream &operator<<(std::ostream &os, const Joc &joc)
     for (const auto &echipa : joc.echipe)
     {
         os << echipa << "\n";
-    }
-
-    os << "Sportivi Fotbal:\n";
-    for (const auto &jucator : joc.jucatori_fotbal)
-    {
-        os << jucator << "\n";
-    }
-
-    os << "Sportivi Box:\n";
-    for (const auto &jucator : joc.jucatori_box)
-    {
-        os << jucator << "\n";
-    }
-
-    os << "Sportivi Inot:\n";
-    for (const auto &jucator : joc.jucatori_inot)
-    {
-        os << jucator << "\n";
     }
 
     os << "Toti jucatorii (vectorul jucatori):\n";
@@ -186,7 +183,7 @@ bool Joc::cauta_jucator_in_jucatori_selectati(const std::string &nume_jucator)
 
 bool Joc::check_game_over()
 {
-    return this->jucatori_selectati.size() == this->jucatori_fotbal.size();
+    return this->jucatori_selectati.size() == this->numar_jucatori_fotbal;
 }
 
 long long Joc::calculeaza_timpul_scurs(const std::chrono::time_point<std::chrono::high_resolution_clock> &start,
@@ -218,7 +215,7 @@ void Joc::tura_joc()
     std::cin >> index;
     if (index == 999)
     {
-        this->genereaza_jucator_random();
+        index = this->genereaza_jucator_random();
     }
     else if (index >= this->jucatori.size())
     {
@@ -251,12 +248,12 @@ void Joc::tura_joc()
                       << "               Din pacate ai pierdut...       \n"
                       << "===============================================\n"
                       << "Ai incercat sa alegi un jucator deja selectat,\n"
-                      << "si din aceasta cauza jocul tau a fost resetat.\n"
+                      << "sau ai selectat un jucator care nu este fotbalist.\n"
+                      << "Din aceasta cauza, jocul tau a fost resetat.\n"
                       << "Incearca sa fii mai atent la jucatorii pe care ii alegi.\n"
                       << "Nu te descuraja! Poate data viitoare vei fi mai norocos.\n"
                       << "Memoreaza jucatorii si nu-i alege de doua ori!\n"
                       << "===============================================\n";
-            // throw JucatorInvalidException(nume_jucator_ales);
 
             return;
         }
@@ -283,7 +280,7 @@ void Joc::tura_joc()
                   << "ai dat dovada in timpul jocului.\n"
                   << "Ai reusit sa alegi toti jucatorii fara sa te\n"
                   << "repeti, ceea ce este o realizare mare!\n"
-                  << "Este o dovada de concentrare si perserverenta.\n"
+                  << "Este o dovada de concentrare si perseverenta.\n"
                   << "Speram ca te-ai distrat si ca te vei intoarce\n"
                   << "pentru o noua provocare in curand.\n"
                   << "===============================================\n";
@@ -304,22 +301,4 @@ size_t Joc::genereaza_jucator_random()
               << "\n";
 
     return numar;
-}
-
-void Joc::populate_jucatori()
-{
-    for (const auto &fotbalist : jucatori_fotbal)
-    {
-        jucatori.push_back(fotbalist.clone());
-    }
-
-    for (const auto &boxer : jucatori_box)
-    {
-        jucatori.push_back(boxer.clone());
-    }
-
-    for (const auto &inotator : jucatori_inot)
-    {
-        jucatori.push_back(inotator.clone());
-    }
 }
