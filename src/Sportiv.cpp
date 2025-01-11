@@ -38,6 +38,11 @@ Sportiv::~Sportiv()
     --counter_jucatori;
 }
 
+std::string Sportiv::getNume()
+{
+    return this->nume;
+}
+
 std::ostream &operator<<(std::ostream &os, const Sportiv &sportiv_)
 {
     os << sportiv_.nume << " ";

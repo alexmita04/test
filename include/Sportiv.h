@@ -26,6 +26,7 @@ public:
     void marcheazaAlegereGresita();
 
     virtual std::unique_ptr<Sportiv> clone() const = 0;
+    std::string getNume();
     virtual void schimbaNume() = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const Sportiv &sportiv_);
