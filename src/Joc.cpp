@@ -189,6 +189,14 @@ void Joc::tura_joc()
 
     if (gasit || dynamic_cast<JucatorFotbal *>(jucatori[index].get()) == nullptr)
     {
+
+        int incercare = jucatori[index]->verificaScapare();
+        if (incercare)
+        {
+            std::cout << "Bravo ai raspuns corect!";
+            return;
+        }
+
         this->jucatori_selectati.clear();
         this->scorul_jocului.resetare_scor();
         this->scorul_jocului.incrementare_incercari();
